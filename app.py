@@ -24,8 +24,8 @@ LOCAL_FILE_PATH = '/tmp/inventory.txt'
 
 # Adalo API endpoints
 ADALO_API_KEY = os.getenv('ADALO_API_KEY')
-ADALO_API_URL = 'https://api.adalo.com/v0/apps/your-app-id/collections/your-collection-id'
-ADALO_IMG_API_URL = 'https://api.adalo.com/v0/apps/your-app-id/collections/your-image-collection-id'
+ADALO_API_URL = 'https://api.adalo.com/v0/apps/a22a9592-393a-43dc-96ad-f6cb0711e757/collections/t_5bdw65x8absxj7cz54mk4eut3'
+ADALO_IMG_API_URL = 'https://api.adalo.com/v0/apps/a22a9592-393a-43dc-96ad-f6cb0711e757/collections/t_b24dxcr061y05gfaqi0tz1w6p'
 
 # Function to format text from the OptionText column
 def format_option_text(text):
