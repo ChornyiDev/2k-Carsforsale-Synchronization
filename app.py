@@ -14,7 +14,7 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 # Logging settings
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# FTP connection
+# FTP connection details
 FTP_HOST = '34.173.155.236'
 FTP_PORT = 21
 FTP_USER = os.getenv('FTP_USER')
@@ -22,15 +22,15 @@ FTP_PASS = os.getenv('FTP_PASS')
 FTP_FILE_PATH = '/inventory.txt'
 LOCAL_FILE_PATH = '/tmp/inventory.txt'
 
-# Adalo API
+# Adalo API endpoints
 ADALO_API_KEY = os.getenv('ADALO_API_KEY')
-ADALO_API_URL = 'https://api.adalo.com/v0/apps/a22a9592-393a-43dc-96ad-f6cb0711e757/collections/t_5bdw65x8absxj7cz54mk4eut3'
-ADALO_IMG_API_URL = 'https://api.adalo.com/v0/apps/a22a9592-393a-43dc-96ad-f6cb0711e757/collections/t_b24dxcr061y05gfaqi0tz1w6p'
+ADALO_API_URL = 'https://api.adalo.com/v0/apps/your-app-id/collections/your-collection-id'
+ADALO_IMG_API_URL = 'https://api.adalo.com/v0/apps/your-app-id/collections/your-image-collection-id'
 
 # Function to format text from the OptionText column
 def format_option_text(text):
     response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",  
+        model="gpt-4o-mini",
         messages=[
             {
                 "role": "system",
@@ -103,7 +103,7 @@ def format_description_text(text):
     formatted_text = response['choices'][0]['message']['content']
     return formatted_text.strip()
 
-# Function to upload a file from FTP
+# Function to download a file from FTP
 def download_file_from_ftp():
     with ftplib.FTP() as ftp:
         ftp.connect(FTP_HOST, FTP_PORT)
@@ -160,7 +160,7 @@ def delete_record_from_adalo(api_url, record_id):
 # Function for processing images and adding them to the image table
 def handle_images(vin, img_urls):
     img_list = img_urls.split(',')
-    main_img_url = img_list[0].strip() if img_list else ''  # Перший URL для Main IMG
+    main_img_url = img_list[0].strip() if img_list else ''  # First URL for Main IMG
     
     # Add all images to the image table
     for img_url in img_list:
@@ -203,19 +203,21 @@ def sync_data():
     for index, item in enumerate(inventory_data):
         try:
             vin = item['VIN']
-            img_urls = item.get('images', '')  # Check for the presence of the 'images' key
-
-            main_img_url = handle_images(vin, img_urls)
-            item['Main IMG'] = main_img_url
-
-            # Text formatting for OptionText and Description columns
-            item['OptionText'] = format_option_text(item.get('OptionText', ''))
-            item['Description'] = format_description_text(item.get('Description', ''))
-            
             if vin not in adalo_vins:
                 logging.info("Adding new record for VIN %s (%d/%d)", vin, index + 1, len(inventory_data))
+                
+                img_urls = item.get('images', '')  # Check for the presence of the 'images' key
+                main_img_url = handle_images(vin, img_urls)
+                item['Main IMG'] = main_img_url
+
+                # Text formatting for OptionText and Description columns
+                item['OptionText'] = format_option_text(item.get('OptionText', ''))
+                item['Description'] = format_description_text(item.get('Description', ''))
+                
                 add_record_to_adalo(ADALO_API_URL, item)
                 total_changes += 1
+            else:
+                logging.info("VIN %s already exists. Skipping.", vin)
         except Exception as e:
             logging.error(f"Error processing VIN {vin}: {e}")
 
